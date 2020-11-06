@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>Game</title>
+    <meta name="description" content="Game" />
+    <meta name="author" content="Felipe Castro" />
+    <style>
+      .game {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+      }
+      .arena {
+        width: 500px;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1rem;
+      }
+      .arena-row {
+        display: flex;
+        flex: 1;
+      }
+      .arena-slot {
+        border: 1px solid;
+        flex: 1;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="game">
+      <div id="arena" class="arena"></div>
+      <span id="playerName"></span>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+      var socket = io();
+      let player = {};
+
+      socket.on("updateArena", function (arena) {
+        reloadArena(arena);
+      });
+
+      socket.on("you", function (me) {
+        player = me;
+        $("#playerName").text(player.name);
+      });
+
+      document.onkeydown = checkKey;
+
+      function checkKey(e) {
+        e = e || window.event;
+
+        if (e.keyCode == "38") {
+          socket.emit("moveUp", player.name);
+        } else if (e.keyCode == "40") {
+          socket.emit("moveDown", player.name);
+        } else if (e.keyCode == "37") {
+          socket.emit("moveLeft", player.name);
+        } else if (e.keyCode == "39") {
+          socket.emit("moveRight", player.name);
+        }
+      }
+
+      function reloadArena(arena) {
+        $("#arena").empty();
+        for (let i = 0; i < arena.length; i++) {
+          $("#arena").append(
+            $("<div />", {
+              id: "row-" + i,
+              class: "arena-row",
+            })
+          );
+          for (let j = 0; j < arena[0].length; j++) {
+            const color = arena[i][j] ? arena[i][j].color : "white";
+            $("#row-" + i).append(
+              $("<div />", {
+                id: i + "," + j,
+                class: "arena-slot",
+                style: "background-color: " + color,
+              })
+            );
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
